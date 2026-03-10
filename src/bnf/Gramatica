@@ -1,0 +1,151 @@
+// Um programa é uma lista de comandos (declarações, comandos, blocos)
+<programa> ::= <lista_comandos>
+
+// Lista de comandos pode ser vazia (ε) ou composta
+<lista_comandos> ::= <comando> <lista_comandos> | ε
+
+// Um comando pode ser:
+// - um comando simples terminado por ;
+// - um se/senao (if/else)
+// - um laço para (for) 
+// - um bloco { ... }
+<comando> ::= <comando_simples> ";"
+             | <comando_se>
+             | <comando_para>
+             | <bloco>
+
+// Bloco é um agrupamento de comandos entre chaves
+<bloco> ::= "{" <lista_comandos> "}"
+
+// Comandos simples: declaração, atribuição, impressão ou leitura
+<comando_simples> ::= <declaracao>
+                    | <atribuicao>
+                    | <comando_imprimir>
+                    | <comando_ler>
+
+// Declaração de variável: inteiro (int), real (float), texto (string)
+<declaracao> ::= "var" <identificador> <tipo> <inicializacao_opcional>
+<inicializacao_opcional> ::= "=" <expressao> | ε
+<tipo> ::= "inteiro" | "real" | "texto"
+
+// Atribuição: nome = expressão
+<atribuicao> ::= <identificador> "=" <expressao>
+
+// Comando de saída: comando_imprimir(expr, expr, ...)
+<comando_imprimir> ::= "imprimir" "(" <lista_expressoes> ")"
+<lista_expressoes> ::= <expressao> <mais_expressoes>
+<mais_expressoes> ::= "," <expressao> <mais_expressoes> | ε
+
+// Comando de entrada: ler(var, var, ...)
+<comando_ler> ::= "ler" "(" <lista_variaveis> ")"
+<lista_variaveis> ::= <identificador> <mais_variaveis>
+<mais_variaveis> ::= "," <identificador> <mais_variaveis> | ε
+
+// Estrutura condicional
+<comando_se> ::= "se" <expressao> <bloco> <senao_opcional>
+<senao_opcional> ::= "senao" <bloco> | ε
+
+/* 
+	Estrutura de repetição: pode ser estilo while ou clássico
+	
+	No Go não existe a palavra-chave while. Ou seja, o Go simplifica e usa só for para tudo.
+	No Mini-Go, estamos seguindo essa mesma ideia: 
+	- não há while separado, mas o for com apenas uma condição é o equivalente ao while.
+*/
+<comando_para> ::= <para_enquanto> | <para_classico>
+
+// For estilo while (equivalente ao while)
+<para_enquanto> ::= "para" <expressao> <bloco>
+
+// For clássico: para inicio; cond; pos { bloco }
+<para_classico> ::= "para" <inicio_opcional> ";" <condicao_opcional> ";" <pos_opcional> <bloco>
+<inicio_opcional> ::= <inicializacao> | ε
+<condicao_opcional> ::= <expressao> | ε
+<pos_opcional> ::= <atribuicao> | ε
+<inicializacao> ::= <declaracao> | <atribuicao>
+
+// Expressões com precedência: ||, &&, == !=, < > <= >=, + -, * /, unários
+<expressao> ::= <ou_logico>
+
+// Operador lógico OR
+<ou_logico> ::= <e_logico> <mais_ou>
+<mais_ou> ::= "||" <e_logico> <mais_ou> | ε
+
+// Operador lógico AND
+<e_logico> ::= <igualdade> <mais_e>
+<mais_e> ::= "&&" <igualdade> <mais_e> | ε
+
+// Igualdade
+<igualdade> ::= <relacional> <mais_igualdade>
+<mais_igualdade> ::= "==" <relacional> <mais_igualdade>
+                   | "!=" <relacional> <mais_igualdade>
+                   | ε
+
+// Relacionais
+<relacional> ::= <aditivo> <mais_relacional>
+<mais_relacional> ::= "<" <aditivo> <mais_relacional>
+                    | "<=" <aditivo> <mais_relacional>
+                    | ">" <aditivo> <mais_relacional>
+                    | ">=" <aditivo> <mais_relacional>
+                    | ε
+
+// Soma e subtração
+<aditivo> ::= <multiplicativo> <mais_aditivo>
+<mais_aditivo> ::= "+" <multiplicativo> <mais_aditivo>
+                 | "-" <multiplicativo> <mais_aditivo>
+                 | ε
+
+// Multiplicação e divisão
+<multiplicativo> ::= <unario> <mais_multiplicativo>
+<mais_multiplicativo> ::= "*" <unario> <mais_multiplicativo>
+                        | "/" <unario> <mais_multiplicativo>
+                        | ε
+
+/* 
+	Unários:
+	- "!" →  operador lógico de negação (NOT).
+	- "-" →  operador aritmético de negação (inversão de sinal).
+*/
+<unario> ::= <op_unario> <primario>
+<op_unario> ::= "!" | "-" | ε
+
+// Primários: literais, identificadores ou (expressão)
+<primario> ::= <literal>
+             | <identificador>
+             | "(" <expressao> ")"
+
+// Literais: inteiro, real ou texto
+<literal> ::= <inteiro> | <real> | <texto>
+
+// Inteiro: sequência de dígitos
+<inteiro> ::= <digito> <mais_digitos>
+<mais_digitos> ::= <digito> <mais_digitos> | ε
+
+// Real: dígitos . dígitos
+<real> ::= <digito> <mais_digitos> "." <digito> <mais_digitos>
+
+/* 
+	Texto: entre aspas, com escapes
+	\" → representa o caractere aspas (").
+		O primeiro \" é a abertura do texto.
+		O segundo \" é o fechamento do texto.
+	<escape> → combinações que começam com barra invertida:
+		\" → para colocar uma aspas dentro do texto.
+		\\ → para colocar uma barra invertida dentro do texto.
+*/
+<texto> ::= "\"" <conteudo_texto> "\""
+<conteudo_texto> ::= <caractere_texto> <conteudo_texto> | ε
+<caractere_texto> ::= <caractere_texto_seguro> | <escape>
+<caractere_texto_seguro> ::= qualquer-caractere-exceto-aspas-ou-barra
+<escape> ::= "\\" "\"" | "\\" "\\" | "\\\""
+
+// Identificadores: letra inicial, seguido de letras/dígitos/_
+<identificador> ::= <letra> <resto_identificador>
+<resto_identificador> ::= <letra> <resto_identificador>
+                        | <digito> <resto_identificador>
+                        | "_" <resto_identificador>
+                        | ε
+
+// Definição de letras e dígitos
+<letra> ::= "A" | ... | "Z" | "a" | ... | "z"
+<digito> ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
